@@ -210,7 +210,8 @@ public class PictureUtils
 
     public static File createPublicImageFile() throws IOException
     {
-        File appDir = new File(Environment.getExternalStorageDirectory() + "/photodemo");
+        //File appDir = new File(Environment.getExternalStorageDirectory() + "/photodemo");
+        File appDir = new File(Environment.getExternalStorageDirectory() + "/mt24hr/");
         if (!appDir.exists())
         {
             appDir.mkdir();
