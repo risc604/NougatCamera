@@ -20,6 +20,8 @@ import java.io.IOException;
 /**
  * Created by tomcat on 2017/8/4.
  */
+// http://blog.csdn.net/wmz199123/article/details/69371800
+
 
 public class PictureUtils
 {
