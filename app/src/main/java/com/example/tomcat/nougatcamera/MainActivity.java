@@ -5,9 +5,10 @@ import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.pm.PermissionGroupInfo;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -19,13 +20,17 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+
+
+//https://stackoverflow.com/questions/16060143/android-take-photo-and-resize-it-before-saving-on-sd-card/36210688#36210688
 
 public class MainActivity extends AppCompatActivity
 {
@@ -81,7 +86,17 @@ public class MainActivity extends AppCompatActivity
             case REQ_GALLERY:
                 if (resultCode != Activity.RESULT_OK)
                     return;
+                try {
+                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), Uri.parse(mPublicPhotoPath));
+                    Log.i(TAG, "bitmap size: " + bitmap.getByteCount() + " bytes");
 
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+
+                //setUriToBitmap();
+                //Bitmap  bitmap = new Bitmap().
                 File f2 = new File(mPublicPhotoPath);
                 Log.i(TAG, "f2 size: " + f2.length());
 
@@ -231,6 +246,20 @@ public class MainActivity extends AppCompatActivity
             Toast.makeText(this, "SD card Read Permission always OK.", Toast.LENGTH_SHORT).show();
         }
     }
+
+    //private void setUriToBitmap() throws IOException {
+    //    Bitmap photo = (Bitmap) "your Bitmap image";
+    //    photo = Bitmap.createScaledBitmap(photo, 100, 100, false);
+    //    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    //    photo.compress(Bitmap.CompressFormat.JPEG, 40, bytes);
+    //
+    //    File f = new File(Environment.getExternalStorageDirectory()
+    //            + File.separator + "Imagename.jpg");
+    //    f.createNewFile();
+    //    FileOutputStream fo = new FileOutputStream(f);
+    //    fo.write(bytes.toByteArray());
+    //    fo.close();
+    //}
 
     private void getImageFormAlbum()
     {
