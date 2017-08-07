@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity
     private static final int WRITE_PERMISSION_CODE = 101;
     private static final int READ_PERMISSION_CODE = 102;
 
-    private static final String PROVIDER_PATH = "com.example.tomcat.nugatcamera.provider";
+    private static final String PROVIDER_PATH = BuildConfig.APPLICATION_ID + ".provider";
 
     private String mPublicPhotoPath;
     private Uri     uri;
