@@ -13,9 +13,11 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.RequiresApi;
+import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Created by tomcat on 2017/8/4.
@@ -33,6 +35,8 @@ public class PictureUtils
     @RequiresApi(api = Build.VERSION_CODES.O)
     public static String getFilePath_below19(Context context, Uri uri)
     {
+        Log.i(TAG, "getFilePath_below19(), context: " + context +
+                ", uri: " + uri);
         String[] proj = {MediaStore.Images.Media.DATA};
         Cursor   cursor = context.getContentResolver().query(uri, proj, null, null);
         int      column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
@@ -44,6 +48,8 @@ public class PictureUtils
     @TargetApi(Build.VERSION_CODES.KITKAT)
     public static String getPath_above19(final Context context, final Uri uri)
     {
+        Log.i(TAG, "getPath_above19(), context: " + context +
+                ", uri: " + uri);
         final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
 
         //DocumentProvider
@@ -117,6 +123,10 @@ public class PictureUtils
                                        Uri uri, String selection,
                                        String[] selectionArgs)
     {
+        Log.i(TAG,  "getDataColumn(), context: " + context +
+                    ", uri: " + uri +
+                    ", selectionArgs: " + Arrays.toString(selectionArgs));
+
         Cursor cursor = null;
         final String column = "_data";
         final String[] projection = {column};
@@ -140,27 +150,35 @@ public class PictureUtils
 
     public static boolean isExternalStorageDocument(Uri uri)
     {
+        Log.i(TAG,  "isExternalStorageDocument(), uri: " + uri);
         return "com.android.externalstorage.documents".equals(uri.getAuthority());
     }
 
     public static boolean isDownloadsDocument(Uri uri)
     {
+        Log.i(TAG,  "isDownloadsDocument(), uri: " + uri);
         return "com.android.providers.downloads.documents".equals(uri.getAuthority());
     }
 
     public static boolean isMediaDocument(Uri uri)
     {
+        Log.i(TAG,  "isMediaDocument(), uri: " + uri);
         return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
 
     public static boolean isGooglePhotosUri(Uri uri)
     {
+        Log.i(TAG,  "isGooglePhotosUri(), uri: " + uri);
         return "com.google.android.apps.photos.content".equals(uri.getAuthority());
     }
 
 
     public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight)
     {
+        Log.i(TAG,  "calculateInSampleSize(), options: " + options +
+                    ", reqWidth; " + reqWidth +
+                    ", reqHeight: " + reqHeight);
+
         final int height = options.outHeight;
         final int width = options.outWidth;
         int inSampleSize = 1;
@@ -169,6 +187,9 @@ public class PictureUtils
             final int heightRatio = Math.round((float) height / (float) reqHeight);
             final int widthRatio = Math.round((float)width / (float) reqWidth);
             inSampleSize = heightRatio < widthRatio ? heightRatio : widthRatio;
+            Log.i(TAG, "height: " + height + ", width: " + width +
+                    ", heightRatio: " + heightRatio + ", widthRatio: " + widthRatio +
+                    ", inSampleSize: " + inSampleSize);
         }
 
         return inSampleSize;
@@ -176,6 +197,10 @@ public class PictureUtils
 
     public static Bitmap getSamllBitmap(String filePath, int reqWidth, int reqHeight)
     {
+        Log.i(TAG,  "getSamllBitmap(), filePath: " + filePath +
+                ", reqWidth; " + reqWidth +
+                ", reqHeight: " + reqHeight);
+
         final BitmapFactory.Options options = new BitmapFactory.Options();
 
         options.inJustDecodeBounds = true;
@@ -188,6 +213,8 @@ public class PictureUtils
 
     public static boolean hasSdcard()
     {
+        Log.i(TAG,  "hasSdcard()..." );
+
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED))
         {
             return true;
@@ -200,9 +227,15 @@ public class PictureUtils
 
     public static void gallerAddPicture(String mPublicPhotoPath, Context context)
     {
+        Log.i(TAG,  "gallerAddPicture(), mPublicPhotoPath: " + mPublicPhotoPath +
+                    ", context: " + context);
+
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         File f = new File(mPublicPhotoPath);
         Uri  contentUri = Uri.fromFile(f);
+
+        Log.i(TAG,  "mediaScanIntent: " + mediaScanIntent +
+                    ", contentUri: " + contentUri + ", File size: " + f.length());
 
         mediaScanIntent.setData(contentUri);
         context.sendBroadcast(mediaScanIntent);
@@ -210,6 +243,8 @@ public class PictureUtils
 
     public static File createPublicImageFile() throws IOException
     {
+        Log.i(TAG,  "createPublicImageFile()...");
+
         //File appDir = new File(Environment.getExternalStorageDirectory() + "/photodemo");
         File appDir = new File(Environment.getExternalStorageDirectory() + "/mt24hr/");
         if (!appDir.exists())

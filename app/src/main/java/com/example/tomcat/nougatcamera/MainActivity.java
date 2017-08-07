@@ -25,6 +25,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity
 {
@@ -51,6 +52,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
+        Log.i(TAG, "onCreate()...");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -67,6 +69,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
+        Log.i(TAG, "onActivityResult(), requestCode: " + requestCode +
+                    ", resultCode: " + resultCode + ", data: " + data);
         super.onActivityResult(requestCode, resultCode, data);
 
         mTargetW = ivPicture.getWidth();
@@ -78,9 +82,15 @@ public class MainActivity extends AppCompatActivity
                 if (resultCode != Activity.RESULT_OK)
                     return;
 
+                File f2 = new File(mPublicPhotoPath);
+                Log.i(TAG, "f2 size: " + f2.length());
+
                 uri = Uri.parse(mPublicPhotoPath);
                 path = uri.getPath();
                 PictureUtils.gallerAddPicture(mPublicPhotoPath, this);
+
+                Log.i(TAG, "mPublicPhotoPath: " + mPublicPhotoPath + ", uri: " + uri +
+                            ", path: " + path );
                 break;
 
             case REQUEST_CODE_PICK_IMAGE:
@@ -108,6 +118,10 @@ public class MainActivity extends AppCompatActivity
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults)
     {
+        Log.i(TAG, "onRequestPermissionsResult(), requestCode: " + requestCode +
+                ", permissions: " + Arrays.toString(permissions) +
+                ",\ngrantResults: " + Arrays.toString(grantResults));
+
         switch (requestCode)
         {
             case WRITE_PERMISSION_CODE:
@@ -148,13 +162,12 @@ public class MainActivity extends AppCompatActivity
                 break;
         }
 
-
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
     }
 
     public void btnGetPhotoOnClick(final View view)
     {
+        Log.i(TAG, "btnGetPhotoOnClick(), view: " + view);
         CharSequence[] items = {"相 簿", "相 機"};
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
@@ -188,12 +201,14 @@ public class MainActivity extends AppCompatActivity
     //--------------- User define function -------------------------------//
     private void initView()
     {
+        Log.i(TAG, "initView()...");
         ivPicture = (ImageView) findViewById(R.id.imageView1);
         btnPhoto = (Button) findViewById(R.id.btnGetPhoto);
     }
 
     private void initControl()
     {
+        Log.i(TAG, "initControl()...");
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
                 PackageManager.PERMISSION_GRANTED)
         {
@@ -219,6 +234,7 @@ public class MainActivity extends AppCompatActivity
 
     private void getImageFormAlbum()
     {
+        Log.i(TAG, "getImageFormAlbum()...");
         Intent intent = new Intent(Intent.ACTION_PICK);
         intent.setType("image/*");
         startActivityForResult(intent, REQUEST_CODE_PICK_IMAGE);
@@ -226,6 +242,7 @@ public class MainActivity extends AppCompatActivity
 
     private void showTakePicture()
     {
+        Log.i(TAG, "showTakePicture()...");
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
         {
@@ -240,6 +257,7 @@ public class MainActivity extends AppCompatActivity
 
     private void startTake()
     {
+        Log.i(TAG, "startTake()...");
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null)
         {
@@ -260,7 +278,7 @@ public class MainActivity extends AppCompatActivity
                 takePictureIntent.setAction(MediaStore.ACTION_IMAGE_CAPTURE);
                 takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 Uri photoURI = FileProvider.getUriForFile(this, PROVIDER_PATH, photoFile);
-                Log.i(TAG, "photoURI: " + photoURI);
+                Log.i(TAG, "photoURI: " + photoURI + ", photoFile: " + photoFile.length());
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(takePictureIntent, REQ_GALLERY);
             }
