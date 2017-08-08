@@ -10,6 +10,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.provider.ContactsContract;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.RequiresApi;
@@ -232,6 +233,7 @@ public class PictureUtils
 
         Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
         File f = new File(mPublicPhotoPath);
+
         Uri  contentUri = Uri.fromFile(f);
 
         Log.i(TAG,  "mediaScanIntent: " + mediaScanIntent +

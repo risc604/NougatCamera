@@ -2,14 +2,19 @@ package com.example.tomcat.nougatcamera;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -23,10 +28,11 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Arrays;
 
 
@@ -89,13 +95,12 @@ public class MainActivity extends AppCompatActivity
 
                 //setUriToBitmap();
                 //Bitmap  bitmap = new Bitmap().
-                File f2 = new File(mPublicPhotoPath);
-                Log.i(TAG, "f2 size: " + f2.length());
+                //File f2 = new File(mPublicPhotoPath);
+               // Log.i(TAG, "f2 size: " + f2.length());
 
                 uri = Uri.parse(mPublicPhotoPath);
                 path = uri.getPath();
                 PictureUtils.gallerAddPicture(mPublicPhotoPath, this);
-
                 Log.i(TAG, "mPublicPhotoPath: " + mPublicPhotoPath + ", uri: " + uri +
                             ", path: " + path );
                 break;
@@ -116,7 +121,31 @@ public class MainActivity extends AppCompatActivity
 
                 break;
         }
-        ivPicture.setImageBitmap(PictureUtils.getSamllBitmap(path, mTargetW, mTargetH));
+        int degree = getOrientention(path);
+        Bitmap tmpBMP = rotateImage(PictureUtils.getSamllBitmap(path, mTargetW, mTargetH), degree);
+        tmpBMP = resize(tmpBMP, 1920, 1080);
+        Log.i(TAG, "degree: " + degree + ", BMP size: " + tmpBMP.getByteCount());
+
+        try {
+            FileOutputStream fos = new FileOutputStream(
+                    new File(   Environment.getExternalStorageDirectory()+"/mt24hr/" +
+                                System.currentTimeMillis() + ".png"));
+            tmpBMP.compress(Bitmap.CompressFormat.PNG, 90, fos);
+            Log.i(TAG, "File size: " + (float)fos.getChannel().size()/1024);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        ivPicture.setImageBitmap(tmpBMP);
+        //ivPicture.setImageBitmap(PictureUtils.getSamllBitmap(path, mTargetW, mTargetH));
+        if (photoFile.exists()) {
+            Log.i(TAG, "photoFile: " + photoFile.getAbsolutePath() +
+                    ", size: " + ((float)photoFile.length())/1024 + " KBytes.");
+            photoFile.delete();
+        }
+
 
     }
 
@@ -276,15 +305,16 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    File photoFile = null;
     private void startTake()
     {
         Log.i(TAG, "startTake()...");
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null)
         {
-            File photoFile = null;
+            //File photoFile = null;
             //photoFile = PictureUtils.createPublicImageFile();
-            photoFile = new File(Uri.parse("file://sdcard/image_output.jpg").getPath());
+            photoFile = new File(Uri.parse("file:////sdcard/image_output.jpg").getPath());
             //photoFile = Uri.("file:////sdcard/image_output.jpg");
             mPublicPhotoPath = photoFile.getAbsolutePath();
             Log.i(TAG, "mPublicPhotoPath: " + mPublicPhotoPath);
@@ -300,6 +330,133 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
+
+    //public static Bitmap rotateImage(Bitmap img, int degree)
+    private Bitmap rotateImage(Bitmap img, int degree)
+    {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(degree);
+        Bitmap rotatedImg = Bitmap.createBitmap(img, 0, 0, img.getWidth(), img.getHeight(), matrix, true);
+        return rotatedImg;
+    }
+
+    //public static int getOrientention(String filePath)
+    private int getOrientention(String filePath)
+    {
+        File f = new File(filePath);
+        ExifInterface exif = null;
+        try {
+            exif = new ExifInterface(f.getPath());
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
+        if (exif != null) {
+            int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL);
+
+            Log.i(TAG, "orientation: " + orientation + ", exif: " + exif.toString());
+
+            int angle = 0;
+
+            switch (orientation) {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    angle = 90;
+                    break;
+
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    angle = 180;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    angle = 270;
+                    break;
+
+                default:
+                    Log.e(TAG, "Error !! orientation: " + orientation);
+                    break;
+            }
+
+            return angle;
+        }
+        else
+        {
+            Log.e(TAG, "Error !! exif is null, no Orientention info, degree set 0 !!");
+            return 0;
+        }
+    }
+
+    //public static Bitmap rotateImageIfRequired(Bitmap img, Context context, Uri selectedImage) throws IOException
+    private Bitmap rotateImageIfRequired(Bitmap img, Context context, Uri selectedImage) throws IOException
+    {
+        if (selectedImage.getScheme().equals("content"))
+        {
+            String[] projection = { MediaStore.Images.ImageColumns.ORIENTATION };
+            Cursor c = context.getContentResolver().query(selectedImage, projection, null, null, null);
+            if (c.moveToFirst())
+            {
+                final int rotation = c.getInt(0);
+                Log.w(TAG, "rotation: " + rotation);
+
+                c.close();
+                return rotateImage(img, rotation);
+            }
+            return img;
+        }
+        else
+        {
+            ExifInterface ei = new ExifInterface(selectedImage.getPath());
+            int orientation = ei.getAttributeInt(   ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL);
+            //Timber.d("orientation: %s", orientation);
+            Log.d(TAG, "orientation: " + orientation);
+
+            switch (orientation)
+            {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    return rotateImage(img, 90);
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    return rotateImage(img, 180);
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    return rotateImage(img, 270);
+                default:
+                    return img;
+            }
+        }
+    }
+
+    private Bitmap resize(Bitmap image, int maxWidth, int maxHeight)
+    {
+        if (maxHeight > 0 && maxWidth > 0)
+        {
+            int width = image.getWidth();
+            int height = image.getHeight();
+            float ratioBitmap = (float) width / (float) height;
+            float ratioMax = (float) maxWidth / (float) maxHeight;
+
+            int finalWidth = maxWidth;
+            int finalHeight = maxHeight;
+            if (ratioMax > 1)
+            {
+                finalWidth = (int) ((float)maxHeight * ratioBitmap);
+            }
+            else
+            {
+                finalHeight = (int) ((float)maxWidth / ratioBitmap);
+            }
+
+            Log.i(TAG, "resize(), ratioMax: " + ratioMax +
+                    ", finalWidth: " + finalWidth + ", finalHeight: " + finalHeight);
+            image = Bitmap.createScaledBitmap(image, finalWidth, finalHeight, true);
+            return image;
+        }
+        else
+        {
+            return image;
+        }
+    }
+
 
 }
 
