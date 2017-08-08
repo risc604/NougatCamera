@@ -86,14 +86,6 @@ public class MainActivity extends AppCompatActivity
             case REQ_GALLERY:
                 if (resultCode != Activity.RESULT_OK)
                     return;
-                try {
-                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), Uri.parse(mPublicPhotoPath));
-                    Log.i(TAG, "bitmap size: " + bitmap.getByteCount() + " bytes");
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
 
                 //setUriToBitmap();
                 //Bitmap  bitmap = new Bitmap().
@@ -291,16 +283,11 @@ public class MainActivity extends AppCompatActivity
         if (takePictureIntent.resolveActivity(getPackageManager()) != null)
         {
             File photoFile = null;
-            try
-            {
-                photoFile = PictureUtils.createPublicImageFile();
-                mPublicPhotoPath = photoFile.getAbsolutePath();
-                Log.i(TAG, "mPublicPhotoPath: " + mPublicPhotoPath);
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
+            //photoFile = PictureUtils.createPublicImageFile();
+            photoFile = new File(Uri.parse("file://sdcard/image_output.jpg").getPath());
+            //photoFile = Uri.("file:////sdcard/image_output.jpg");
+            mPublicPhotoPath = photoFile.getAbsolutePath();
+            Log.i(TAG, "mPublicPhotoPath: " + mPublicPhotoPath);
 
             if (photoFile != null)
             {
