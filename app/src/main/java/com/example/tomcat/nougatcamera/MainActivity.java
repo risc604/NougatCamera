@@ -123,7 +123,9 @@ public class MainActivity extends AppCompatActivity
         }
         int degree = getOrientention(path);
         Bitmap tmpBMP = rotateImage(PictureUtils.getSamllBitmap(path, mTargetW, mTargetH), degree);
-        tmpBMP = resize(tmpBMP, 1920, 1080);
+        //tmpBMP = resize(tmpBMP, 800, 600);
+        tmpBMP = getResizedBitmap(tmpBMP, 640, 480);
+        //tmpBMP = Bitmap.createScaledBitmap(tmpBMP, 640, 480, true);
         Log.i(TAG, "degree: " + degree + ", BMP size: " + tmpBMP.getByteCount());
 
         try {
@@ -140,7 +142,7 @@ public class MainActivity extends AppCompatActivity
 
         ivPicture.setImageBitmap(tmpBMP);
         //ivPicture.setImageBitmap(PictureUtils.getSamllBitmap(path, mTargetW, mTargetH));
-        if (photoFile.exists()) {
+        if (photoFile != null && photoFile.exists()) {
             Log.i(TAG, "photoFile: " + photoFile.getAbsolutePath() +
                     ", size: " + ((float)photoFile.length())/1024 + " KBytes.");
             photoFile.delete();
@@ -323,7 +325,13 @@ public class MainActivity extends AppCompatActivity
             {
                 takePictureIntent.setAction(MediaStore.ACTION_IMAGE_CAPTURE);
                 takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                Uri photoURI = FileProvider.getUriForFile(this, PROVIDER_PATH, photoFile);
+                Uri photoURI = null;
+                if (Build.VERSION.SDK_INT >= 24)
+                    photoURI = FileProvider.getUriForFile(this, PROVIDER_PATH, photoFile);
+                else
+                {
+                    photoURI = Uri.fromFile(photoFile);
+                }
                 Log.i(TAG, "photoURI: " + photoURI + ", photoFile: " + photoFile.length());
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(takePictureIntent, REQ_GALLERY);
@@ -424,6 +432,20 @@ public class MainActivity extends AppCompatActivity
                     return img;
             }
         }
+    }
+
+    private Bitmap getResizedBitmap(Bitmap bm, int newHeight, int newWidth)
+    {
+        int width = bm.getWidth();
+        int height = bm.getHeight();
+        float scaleWidth = ((float) newWidth) / width;
+        float scaleHeight = ((float) newHeight) / height;
+        Matrix matrix = new Matrix();
+        // RESIZE THE BIT MAP
+        matrix.postScale(scaleWidth, scaleHeight);
+        // RECREATE THE NEW BITMAP
+        Bitmap resizedBitmap = Bitmap.createBitmap(bm, 0, 0, width, height, matrix, false);
+        return resizedBitmap;
     }
 
     private Bitmap resize(Bitmap image, int maxWidth, int maxHeight)
